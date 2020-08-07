@@ -1,0 +1,36 @@
+---
+title: "trade up contracts"
+author: "Christopher Koenig"
+date: "7/22/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(broom)
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+data <- read_csv("C:\\Users\\rayan\\Documents\\tradeup_data.csv")
+full_set <- data %>%
+  arrange(desc(`Expected Return`))
+head(full_set)
+```
+This table only displays tradeups that have a total cost of less than or equal to 10.
+```{r}
+cheapo <- data %>%
+  filter(Cost <= 10) %>%
+  arrange(desc(`Expected Return`))
+cheapo
+```
+This table displays the tradeup that has the highest return for each collection.
+```{r}
+best_return_for_collec <- data %>%
+  group_by(`Key Collection`) %>%
+  select(everything())%>%
+  slice(which.max(`Expected Return`))
+best_return_for_collec
+```
