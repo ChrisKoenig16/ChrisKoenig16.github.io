@@ -56,7 +56,7 @@ full_set
 This table only displays tradeups that have a total cost of less than or equal to 10.
 ```{r}
 cheapo <- full_set %>%
-  filter(Cost <= 2) %>%
+  filter(Cost <= 10) %>%
   arrange(desc(`Expected Return`))
 cheapo
 ```
