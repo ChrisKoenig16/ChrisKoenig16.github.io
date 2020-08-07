@@ -3,33 +3,67 @@ title: "trade up contracts"
 author: "Christopher Koenig"
 date: "7/22/2020"
 output:
+  html_document:
+    df_print: paged
   pdf_document: default
-  html_document: default
 ---
+$\textbf{Limitations}$
+
+Calculating all possible tradeups is not exactly efficient or really necessary so i instead limit this project in certain ways to make the process much faster and simpler.
+
+The first limitation is that these trade ups consist of only two weapon trade ups. it is possible that combinations of three or more collections can have better return values i've decided not to care.
+
+The second limitation involves float values. Calculating the value of a trade up for every single combination of possible float values or even every possible avg float value is outside of the scope of this project. To keep floats nice and simple i chose a float value that represents the top 20% of each float range. For example a trade up of 10 Factory New Weapons represents an avg float value of .014. I plan on changing this value to something like top 40% because finding skins within the top 20% is not realistic for every skin.If you want floats of that caliber it usually affects the price you can acquire them at thereby changing the expected return of a trade up.(you will see tradeups affected by this in the high ranking return tradeups)
+
+The final limitation in this project is in calculating expected return and cost. Some tradeups have insanely skewed Expected return because the skins you are trading up to have sold for thousands of dollars maybe once. To account for this in my expected return calculations i simply made skins that had avg daily volume of <1 for the past 3 months worth nothing. This was done because even if you did trade up to those skins you wouldnt be able to sell it thereby making it worthless. I also base all the cost and return calculations on steam APIs "Safe" value for each skin. That means the costs of a trade up might be slightly different than what you will calculate by hand because a weapons price is determined via a 7 day average instead of its current market price. This is done in an attempt to limit tradeups with high returns due to weird market fluctuations.
+
+The last thing you need to know is that expected return already includes the cost of the tradeup and tradeups that have zero or less expected return are simply not included in the data set.
+
+$\textbf{Column Values}$
+
+Expected Return: This is the amount you can expect to receive from the trade up. This does account for skins that have minimum and maximum floats which can change the weapons resulting condition (note this number only becomes accurate as the number of tradeups performed approaches infinity. dont get upsetty if you do a trade up once and dont make the expected value)
+
+Cost: The price of acquiring the skins for the tradeup at the correct float. (based on the 7 day average of a specific conditions price)
+
+Primary/Filler Weapon: The name of the weapons used in the trade up
+
+Primary/Filler Collection: The collection the weapons belong to
+
+Primary/Filler Condition: The float value that these weapons were assumed to have for the trade up
+
+Stattrak: indicates if a tradeup is using stattrak weapons
+
+Quantity of Primary Weapon: indicates the ratio of weapons used in the trade up (for example a 3 means 3 of the primary weapon and 7 of the filler weapon were used)
+
+
 
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(dplyr)
-library(broom)
+
 knitr::opts_chunk$set(echo = TRUE)
 ```
-```{r}
-data <- read_csv("C:\\Users\\rayan\\Documents\\tradeup_data.csv")
+This table contains every two weapon trade up.
+```{r, message=FALSE}
+data <- suppressWarnings(read_csv("C:\\Users\\rayan\\Documents\\tradeup_data.csv"))
 full_set <- data %>%
+  mutate(`Primary Weapon` = `Key Weapon`, `Primary Collection` = `Key Collection`,`Primary Condition` = `Key Condition` ) %>%
+  select(-c(X1,`Odds Success`,`Key Weapon`,`Key Collection`,`Key Condition`)) %>%
   arrange(desc(`Expected Return`))
-head(full_set)
+full_set <- full_set[,c(1,2,8,9,3,4,5,10,6,7)]
+full_set
 ```
 This table only displays tradeups that have a total cost of less than or equal to 10.
 ```{r}
-cheapo <- data %>%
+cheapo <- full_set %>%
   filter(Cost <= 10) %>%
   arrange(desc(`Expected Return`))
 cheapo
 ```
 This table displays the tradeup that has the highest return for each collection.
 ```{r}
-best_return_for_collec <- data %>%
-  group_by(`Key Collection`) %>%
+best_return_for_collec <- full_set %>%
+  group_by(`Primary Collection`) %>%
   select(everything())%>%
   slice(which.max(`Expected Return`))
 best_return_for_collec
